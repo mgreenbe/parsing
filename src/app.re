@@ -1,5 +1,15 @@
 [%bs.raw {|require('./app.css')|}];
 
+open ParseArith;
+
+let ts = [INT(1), BINOP(Plus), INT(2), BINOP(Times), INT(3), BINOP(Minus), INT(4)];
+
+let n = parse(ts);
+
+let data = [|obj_of_node(parse(ts))|];
+
+n |> string_of_node |> Js.log;
+
 let component = ReasonReact.statelessComponent("App");
 
 /* let child: Tree.dataT = [|{"name": "y", "children": [||]}|]; */
@@ -17,12 +27,7 @@ let make = (_children) => {
         )
       )>
       <Tree
-        data=[|
-          {
-            "name": "x",
-            "children": [|{"name": "y", "children": [||]}, {"name": "z", "children": [||]}|]
-          }
-        |]
+        data
         orientation="vertical"
         pathFunc="straight"
         translate={"x": 320, "y": 30}
