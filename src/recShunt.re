@@ -131,11 +131,22 @@ let consume = ((exprs, ops), t) => {
   }
 };
 
-let rec clearOps = ((exprs, ops)) =>
+let rec clearOps = (exprs, ops) =>
   switch (exprs, ops) {
   | ([e], []) => e
   | ([e, f, ...g], [BINOP(p), ...q]) =>
     logPopAndApply(e, f, g, p, q);
-    clearOps(([binOpNode(p, f, e), ...g], q))
-  | _ => Js.Exn.raiseError("Couldn't clear opstuation stack.")
+    clearOps([binOpNode(p, f, e), ...g], q)
+  | _ => Js.Exn.raiseError("Couldn't clear op stack.")
   };
+
+let rec parse = (~closer=None, ~nodes=[], ~ops=[], ts) =>
+  switch (ts, closer) {
+  /* End of token stream */
+  | ([], None) => clearOps(nodes, ops)
+  | ([INT(n), ...moreTs], _) =>
+    logPushNode(nodes, IntLitNode(n));
+    parse(~closer, ~nodes=[IntLitNode(n), ...nodes], ~ops, moreTs)
+  | ([BINOP(o), ..._], _) => consumeBinOp(o, nodes, ops)
+  };
+/*returns (e, leftoverTokens)*/

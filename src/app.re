@@ -1,14 +1,29 @@
 [%bs.raw {|require('./app.css')|}];
 
-open ParseArith;
+open Shunt;
 
-let ts = [INT(1), BINOP(Plus), INT(2), BINOP(Times), INT(3), BINOP(Minus), INT(4)];
+/* let ts = [INT(1), BINOP(Plus), INT(2), BINOP(Times), INT(3), BINOP(Minus), INT(4)]; */
+let ts = [
+  INT(0),
+  BINOP(Minus),
+  LPAREN,
+  INT(1),
+  BINOP(Plus),
+  INT(2),
+  RPAREN,
+  BINOP(Power),
+  INT(3),
+  BINOP(Power),
+  LPAREN,
+  INT(4),
+  BINOP(Divide),
+  INT(5),
+  RPAREN
+];
 
-let n = parse(ts);
+let obj = ts |> List.fold_left(consume, ([], [])) |> clearOps |> obj_of_node;
 
-let data = [|obj_of_node(parse(ts))|];
-
-n |> string_of_node |> Js.log;
+let data = [|obj|];
 
 let component = ReasonReact.statelessComponent("App");
 
@@ -19,7 +34,7 @@ let make = (_children) => {
     <div
       style=(
         ReactDOMRe.Style.make(
-          ~width="40rem",
+          ~width="60rem",
           ~height="40rem",
           ~margin="2rem",
           ~backgroundColor="papayawhip",
