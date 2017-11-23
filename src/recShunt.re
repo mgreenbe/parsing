@@ -71,18 +71,19 @@ let string_of_exprs = (exprs) =>
 let string_of_ops = (ops) =>
   ops |> List.map(string_of_token) |> List.rev |> Array.of_list |> Js.Array.joinWith(", ");
 
+let logPopAndApply = (e, f, g, p, q) => {
+  Js.log("    " ++ string_of_ops(q) ++ " >> " ++ string_of_token(BINOP(p)));
+  Js.log("    " ++ string_of_exprs(g) ++ " >> " ++ string_of_node(f) ++ ", " ++ string_of_node(e));
+  Js.log("    " ++ string_of_exprs(g) ++ " << " ++ string_of_node(binOpNode(p, f, e)))
+};
+
 let rec consumeBinOp = (o, exprs, ops) =>
   switch (exprs, ops) {
   | (_, [BINOP(p), ..._]) when o == Power && p == Power => (exprs, [BINOP(o), ...ops])
   | ([e, f, ...g], [BINOP(p), ...q]) when prec(o) <= prec(p) =>
     Js.log("    Shunt " ++ string_of_binOp(o) ++ " aside.");
-    Js.log("    " ++ string_of_ops(q) ++ " >> " ++ string_of_token(BINOP(p)));
-    Js.log(
-      "    " ++ string_of_exprs(g) ++ " >> " ++ string_of_node(f) ++ ", " ++ string_of_node(e)
-    );
-    Js.log("    " ++ string_of_exprs(g) ++ " << " ++ string_of_node(binOpNode(p, f, e)));
+    logPopAndApply(e, f, g, p, q);
     consumeBinOp(o, [binOpNode(p, f, e), ...g], q)
-  /* Subtlety with right associativity in the above. */
   | (_, [])
   | (_, [LPAREN, ..._])
   | ([_, _, ..._], [_, ..._]) =>
@@ -91,12 +92,6 @@ let rec consumeBinOp = (o, exprs, ops) =>
   | ([], _)
   | ([_], _) => Js.Exn.raiseError("Expression stack too small.")
   };
-
-let logPopAndApply = (e, f, g, p, q) => {
-  Js.log("    " ++ string_of_ops(q) ++ " >> " ++ string_of_token(BINOP(p)));
-  Js.log("    " ++ string_of_exprs(g) ++ " >> " ++ string_of_node(f) ++ ", " ++ string_of_node(e));
-  Js.log("    " ++ string_of_exprs(g) ++ " << " ++ string_of_node(binOpNode(p, f, e)))
-};
 
 let logConsumeToken = (t) => Js.log("  Consume t = " ++ string_of_token(t) ++ ":");
 
@@ -143,10 +138,39 @@ let rec clearOps = (exprs, ops) =>
 let rec parse = (~closer=None, ~nodes=[], ~ops=[], ts) =>
   switch (ts, closer) {
   /* End of token stream */
-  | ([], None) => clearOps(nodes, ops)
+  | ([], None) => (clearOps(nodes, ops), [])
   | ([INT(n), ...moreTs], _) =>
     logPushNode(nodes, IntLitNode(n));
     parse(~closer, ~nodes=[IntLitNode(n), ...nodes], ~ops, moreTs)
-  | ([BINOP(o), ..._], _) => consumeBinOp(o, nodes, ops)
+  | ([BINOP(o), ...moreTs], _) =>
+    let (newNodes, newOps) = consumeBinOp(o, nodes, ops);
+    parse(~closer, ~nodes=newNodes, ~ops=newOps, moreTs)
+  | ([LPAREN, ...moreTs], _) =>
+    print_endline("LPAREN encountered. Parsing subexpression.");
+    let (e, leftoverTs) = parse(~closer=Some(RPAREN), moreTs);
+    print_endline("Parsed subexpression: " ++ string_of_node(e));
+    parse(~closer, ~nodes=[e, ...nodes], ~ops, leftoverTs)
+  | ([RPAREN, ...moreTs], Some(RPAREN)) => (clearOps(nodes, ops), moreTs)
+  | ([RPAREN, ..._], _) => Js.Exn.raiseError("Unmatched RPAREN.")
+  | ([], Some(_)) => Js.Exn.raiseError("Unmatched LPAREN.")
   };
-/*returns (e, leftoverTokens)*/
+
+let ts = [
+  INT(0),
+  BINOP(Minus),
+  LPAREN,
+  INT(1),
+  BINOP(Plus),
+  INT(2),
+  RPAREN,
+  BINOP(Power),
+  INT(3),
+  BINOP(Power),
+  LPAREN,
+  INT(4),
+  BINOP(Divide),
+  INT(5),
+  RPAREN
+];
+
+ts |> parse |> fst |> string_of_node |> print_endline;
