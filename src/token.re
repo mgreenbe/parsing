@@ -6,6 +6,8 @@ type t =
   | DIVIDE
   | POWER;
 
+/* | LPAREN */
+/* | RPAREN; */
 let string_of_token = (t) =>
   switch t {
   | INT(n) => string_of_int(n)
@@ -14,4 +16,6 @@ let string_of_token = (t) =>
   | TIMES => "*"
   | DIVIDE => "/"
   | POWER => "^"
+  /* | LPAREN => "(" */
+  /* | RPAREN => ")" */
   };

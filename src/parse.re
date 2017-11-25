@@ -113,7 +113,7 @@ let rec parse =
       }
   );
 
-let ts = Token.[MINUS, INT(1), DIVIDE, INT(4), PLUS, INT(2), TIMES, INT(3)];
+let ts = Token.[MINUS, INT(1), DIVIDE, INT(4), PLUS, INT(2), TIMES, INT(3), PLUS, INT(5)];
 
 let (n, _) = parse(ts);
 

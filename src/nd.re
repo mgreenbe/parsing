@@ -13,7 +13,7 @@ let rec obj_of_node = (node: t) : Tree.dataT =>
     }
   };
 
-let rec string_of_node = (node) =>
+let rec string_of_node = (~depth=0, node) =>
   switch node {
   | Int(n) => string_of_int(n)
   | UnOp(op, arg) =>
@@ -22,15 +22,29 @@ let rec string_of_node = (node) =>
     | UnOp.Postfix(_, _) => string_of_node(arg) ++ UnOp.string_of_op(op)
     }
   | BinOp(op, arg1, arg2) =>
-    switch op {
-    | BinOp.Infix(_, _, _) =>
-      "("
-      ++ string_of_node(arg1)
-      ++ " "
-      ++ BinOp.string_of_op(op)
-      ++ " "
-      ++ string_of_node(arg2)
-      ++ ")"
+    let newDepth = depth + 1;
+    switch (op, depth) {
+    | (BinOp.Infix(_, _, _), 0) =>
+      Format.sprintf(
+        "%s %s %s",
+        string_of_node(~depth=newDepth, arg1),
+        BinOp.string_of_op(op),
+        string_of_node(~depth=newDepth, arg2)
+      )
+    | (BinOp.Infix(_, _, _), _) =>
+      Format.sprintf(
+        "(%s %s %s)",
+        string_of_node(~depth=newDepth, arg1),
+        BinOp.string_of_op(op),
+        string_of_node(~depth=newDepth, arg2)
+      )
+    /* "("
+       ++ string_of_node(arg1)
+       ++ " "
+       ++ BinOp.string_of_op(op)
+       ++ " "
+       ++ string_of_node(arg2)
+       ++ ")" */
     }
   };
 
