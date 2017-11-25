@@ -118,3 +118,7 @@ let rec parse = (~nodes=[], ~ops=[], ts) =>
     parse(~nodes=List.append(groupNodes, nodes), ~ops, leftoverTs)
   | [] => Js.Exn.raiseError("Empty token stream.")
   };
+
+let ts = [BEGIN(PROG), INT(1), OP(PLUS), INT(2), END(PROG)];
+
+let n = parse(ts);

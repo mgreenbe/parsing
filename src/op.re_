@@ -1,0 +1,75 @@
+type assoc =
+  | Left
+  | Right;
+
+type fixity =
+  | Pre
+  | Post
+  | In;
+
+type unaryT =
+  | PrefixOp((Token.t, int))
+  | PostfixOp((Token.t, int))
+type binaryT = 
+  | BinaryPrefixOp((Token.t, int))
+  | BinaryInfixOp((Token.t, int, assoc))
+  | BinaryPostfixOp((Token.t, int));
+
+let token = (op) =>
+  switch op {
+  | UnaryPrefixOp((t, _))
+  | UnaryPostfixOp((t, _))
+  | BinaryPrefixOp((t, _))
+  | BinaryInfixOp((t, _, _))
+  | BinaryPostfixOp((t, _)) => t
+  };
+
+let prec = (op) =>
+  switch op {
+  | UnaryPrefixOp((_, p))
+  | UnaryPostfixOp((_, p))
+  | BinaryPrefixOp((_, p))
+  | BinaryInfixOp((_, p, _))
+  | BinaryPostfixOp((_, p)) => p
+  };
+
+let arity = (op) =>
+  switch op {
+  | UnaryPrefixOp(_)
+  | UnaryPostfixOp(_) => 1
+  | BinaryPrefixOp(_)
+  | BinaryInfixOp(_)
+  | BinaryPostfixOp(_) => 2
+  };
+
+let fixity = (op) =>
+  switch op {
+  | UnaryPrefixOp(_)
+  | BinaryPrefixOp(_) => Pre
+  | UnaryPostfixOp(_)
+  | BinaryPostfixOp(_) => Post
+  | BinaryInfixOp(_) => In
+  };
+
+let string_of_op = (op) =>
+  switch op {
+  | UnaryPrefixOp((token, _)) => "u" ++ Token.string_of_token(token)
+  | UnaryPostfixOp((token, _)) => Token.string_of_token(token) ++ "u"
+  | BinaryPrefixOp((token, _)) => "b" ++ Token.string_of_token(token)
+  | BinaryInfixOp((token, _, _)) => Token.string_of_token(token)
+  | BinaryPostfixOp((token, _)) => Token.string_of_token(token) ++ "b"
+  };
+/*    type t = {
+        token: Token.t,
+        fix,
+        prec: int,
+        assoc: option(assoc)
+      };
+
+      let make = (~token, ~fix, ~prec, ~assoc) =>
+        switch (fix, assoc) {
+        | (Pre, Some(_)
+        | (Post, Some(_)) => Js.Exn.raiseError("Associativity of pre/postfix operators must be None.")
+        | (In, None) => Js.Exn.raiseError("Associativity of infix operators must be Left or Right.")
+        | _ => {token, fix, prec, assoc}
+        }; */

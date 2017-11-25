@@ -21,7 +21,8 @@ let ts = [
   RPAREN
 ];
 
-let obj = ts |> List.fold_left(consume, ([], [])) |> Shunt.clearOps |> obj_of_node;
+/* let obj = ts |> List.fold_left(consume, ([], [])) |> Shunt.clearOps |> obj_of_node; */
+let obj = Parse.obj;
 
 let data = [|obj|];
 
